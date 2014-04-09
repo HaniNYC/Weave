@@ -696,7 +696,7 @@ public class AWSRService extends RService
 		return returnedColumns;
 	}
 
-	public String[][] runStataScript(int[] ids, NestedColumnFilters filters) throws Exception {
+	public MyResult runStataScript(int[] ids, NestedColumnFilters filters) throws Exception {
 
 		CSVParser parser = new CSVParser();
 		int exitValue = -1;
@@ -761,7 +761,7 @@ public class AWSRService extends RService
 		result.data = resultData;
 		result.times[0] = time1;
 		result.times[1] =  time2;
-		return resultData;
+		return result;
 	}
 	
 	/**
@@ -778,7 +778,7 @@ public class AWSRService extends RService
 		
 		String line;
 		while ((line = br.readLine()) != null) {
-		   if (line.startsWith(".") || line.startsWith(">")|| line.startsWith("Runn"))
+		   if (line.startsWith(".") || line.startsWith(">")|| line.startsWith("runn") || line.startsWith("\n"))
 		   {
 			   // this is a command input.. skip
 			   continue;
@@ -786,7 +786,6 @@ public class AWSRService extends RService
 		   else
 		   {
 			   outputs += line;
-			   outputs += '\n';
 		   }
 			// process the line.
 		}
