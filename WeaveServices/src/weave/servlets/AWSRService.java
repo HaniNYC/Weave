@@ -731,7 +731,7 @@ public class AWSRService extends RService
 		String[] args = { "stata-se", "-b", "-q", "do", "/Users/franckamayou/Desktop/StataTest/s03_script_v2013-0621b.do" };
 
 		try {
-			exitValue = CommandUtils.runCommand(args, true);
+			exitValue = CommandUtils.runCommand(args, null, new File("/Users/franckamayou/Desktop/StataTest"));
 			System.out.println("Program terminated with status " + exitValue);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -743,8 +743,9 @@ public class AWSRService extends RService
 		File logFile = new File("/Users/franckamayou/Desktop/StataTest/s03_script_v2013-0621b.log");
 		File scriptResult = new File("/Users/franckamayou/Desktop/StataTest/stata_result.csv");
 		if(logFile.exists()) {
+			String error = getErrorsFromStataLog(logFile);
 			// parse log file for ouput only
-			throw new RemoteException("Error while running Stata script: ");
+			throw new RemoteException("Error while running Stata script: " + error);
 		} else {
 			if(scriptResult.exists()) {
 				resultData = parser.parseCSV(scriptResult, true);
@@ -762,7 +763,37 @@ public class AWSRService extends RService
 		result.times[1] =  time2;
 		return resultData;
 	}
-
+	
+	/**
+	 * This functions reads a stata .log log file and returns the outputs
+	 * 
+	 * @param filename
+	 * @return the log outputs
+	 */
+	private String getErrorsFromStataLog(File file) throws Exception
+	{
+		String outputs = "";
+		
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		
+		String line;
+		while ((line = br.readLine()) != null) {
+		   if (line.startsWith(".") || line.startsWith(">")|| line.startsWith("Runn"))
+		   {
+			   // this is a command input.. skip
+			   continue;
+		   }
+		   else
+		   {
+			   outputs += line;
+			   outputs += '\n';
+		   }
+			// process the line.
+		}
+		br.close();
+		
+		return outputs;
+	}
 	/**
 	 * Gives an object containing the script contents
 	 * 
