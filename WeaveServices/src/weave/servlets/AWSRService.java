@@ -47,6 +47,7 @@ import javax.script.ScriptException;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 
+import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -59,6 +60,8 @@ import org.rosuda.REngine.Rserve.RserveException;
 import weave.beans.RResult;
 import weave.config.WeaveConfig;
 import weave.config.WeaveContextParams;
+import weave.utils.CSVParser;
+import weave.utils.CommandUtils;
 import weave.utils.SQLResult;
 import weave.utils.SQLUtils;
 import weave.utils.SQLUtils.WhereClause;
@@ -84,6 +87,8 @@ public class AWSRService extends RService
 
 	private String awsConfigPath = "";
 
+	private static Process stataProcess = null;
+	
 	public static class AWSConnectionObject {
 		String connectionType;
         String user;
@@ -693,40 +698,58 @@ public class AWSRService extends RService
 		return returnedColumns;
 	}
 
-	public int runStataScript(int[] ids, NestedColumnFilters filters) throws IOException {
+	public String[][] runStataScript(int[] ids, NestedColumnFilters filters) throws Exception {
 
-		long startTime = System.currentTimeMillis();
+		CSVParser parser = new CSVParser();
+		int exitValue = -1;
+//		long startTime = System.currentTimeMillis();
 		Object[][] recordData = DataService.getFilteredRows(ids, filters, null).recordData;
+		String[][] resultData;
 		if(recordData.length == 0){
 			throw new RemoteException("Query produced no rows...");
 		}
-		Object[][] columnData = transpose(recordData);
-		recordData = null;
 		
-		long endTime = System.currentTimeMillis();
+//		String stringData =  parser.createCSV(recordData, true, true);
 		
-		long time1 = endTime - startTime;
+//		recordData = null;
 		
-
-		try
-		{
-			ObjectOutputStream dataStream = new ObjectOutputStream(new FileOutputStream("~data.dat"));
-			dataStream.writeObject(columnData);
-			dataStream.close();
+//		File data = new File("/Users/franckamayou/Desktop/StataTest/data.csv");
+		
+//		FileUtils.writeStringToFile(data, stringData);
+		
+//		long endTime = System.currentTimeMillis();
+//		
+//		long time1 = endTime - startTime;
+		
+		String[] args = { "stata-se", "-b", "-q", "do", "/Users/franckamayou/Desktop/StataTest/s03_script_v2013-0621b.do" };
+		
+		try {
+			exitValue = CommandUtils.runCommand(args, true);
+			System.out.println("Program terminated with status " + exitValue);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		catch(IOException e)
-		{
-			
-		}
-
-		Runtime run = Runtime.getRuntime();
-		Process proc = null;
-		proc = run.exec(new String[] { "stata-se", "-b", "do", "s03_script_v2013-0621b.do" });
 
 		// Since we cannot rely on the return value of the Stata process,
-		// When the process finishes executing, we will test if a file is done executing
-	
-		return 0;
+		// We will assume that the log file is erased at the end of the script.
+		// Therefore if the log exists, the program did not terminate
+		File logFile = new File("/Users/franckamayou/Desktop/StataTest/s03_script_v2013-0621b.log");
+		File scriptResult = new File("/Users/franckamayou/Desktop/StataTest/stata_result.csv");
+		if(logFile.exists()) {
+			// parse log file for ouput only
+			throw new RemoteException("Error while running Stata script: ");
+		} else {
+			if(scriptResult.exists()) {
+				resultData = parser.parseCSV(scriptResult, true);
+//				REXP evalValue = rConnection.eval("read.csv(\"/Users/franckamayou/Desktop/StataTest/stata_result.csv\")");
+//				resultData = RServiceUsingRserve.rexp2javaObj(evalValue);
+			} else {
+				throw new RemoteException("Stata script terminated with no result data");
+			}
+			
+		}
+		
+		return resultData;
 	}
 
 	/**
