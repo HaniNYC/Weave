@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -215,6 +216,9 @@ public class WeaveServlet extends HttpServlet
     	{
     		ExposedMethod m = methodMap.get(methodName);
     		if (m != null)
+    		{
+    			if (m.method.getAnnotation(Deprecated.class) != null)
+    				continue;
     			output += String.format(
 	    				"Exposed servlet method: %s.%s\n",
 	    				m.instance.getClass().getName(),
@@ -224,6 +228,7 @@ public class WeaveServlet extends HttpServlet
 	    						m.paramNames
 	    					)
 	    			);
+    		}
     		else
     			output += "Not exposed: "+methodName;
     	}
@@ -910,7 +915,12 @@ public class WeaveServlet extends HttpServlet
     	
     	String message;
     	if (exception instanceof RuntimeException)
-    		message = exception.toString();
+    	{
+    		StringWriter sw = new StringWriter();
+    		PrintWriter pw = new PrintWriter(sw, true);
+    		exception.printStackTrace(pw);
+    		message = sw.getBuffer().toString();
+    	}
     	else
     		message = exception.getMessage();
     	

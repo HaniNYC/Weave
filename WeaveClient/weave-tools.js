@@ -81,11 +81,11 @@ function queryDataService(method, params, resultHandler, queryId)
  */
 function getMatchingColumnEntity(dataTableTitle, columnTitle, resultHandler)
 {
-	queryDataService("getEntityIdsByMetadata", [{"title": dataTableTitle}, 0], function(tableIds) {
+	queryDataService("findEntityIds", [{"title": dataTableTitle}, []], function(tableIds) {
 		if (tableIds.length == 0)
 			return fail();
-		queryDataService("getEntityChildIds", [tableIds.pop()], function(columnIds) {
-			queryDataService("getEntitiesById", [columnIds], function(entities) {
+		queryDataService("getEntities", [tableIds.pop()], function(tables) {
+			queryDataService("getEntities", [tables[0].childIds], function(entities) {
 				entities = entities.filter(function (entity) { return entity.publicMetadata['title'] == columnTitle; });
 				if (entities.length == 0)
 					return fail();
@@ -133,15 +133,10 @@ function setWeaveColumnId(weave, path, columnId, dataSourceName, sqlParams)
 	path.request('DynamicColumn')
 		.push(null)
 			.request('ReferencedColumn')
-			.push('dynamicColumnReference',null)
-				.request('HierarchyColumnReference')
-				.state({
-					"dataSourceName": dataSourceName,
-					"hierarchyPath": path.libs("mx.utils.ObjectUtil")
-						.vars({"_obj": metadata})
-						.getValue("var x = XML('<attribute/>'); for (var k in _obj) x['@'+k] = _obj[k]; return ObjectUtil.toString(x);")
-				})
-			.pop()
+			.state({
+				"dataSourceName": dataSourceName,
+				"metadata": metadata
+			})
 		.pop();
 }
 
@@ -244,7 +239,7 @@ function weaveAdminImportSQL(connectionName, password, sqlSchema, sqlTable, keyC
  */
 function weaveAdminUpdateColumns(user, pass, tableId, entityUpdater) {
 	var url = '/WeaveServices/AdminService';
-	var getEntities = queryService.bind(null, url, 'getEntitiesById');
+	var getEntities = queryService.bind(null, url, 'getEntities');
 	var bulkUpdateEntities = bulkQueryService.bind(null, url, 'updateEntity');
 	getEntities([user, pass, [tableId]], function(tables) {
 		getEntities([user, pass, tables[0].childIds], function(columns) {

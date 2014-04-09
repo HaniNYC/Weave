@@ -83,7 +83,6 @@ package weave.application
 	import weave.editors.SingleImagePlotterEditor;
 	import weave.editors.WeavePropertiesEditor;
 	import weave.editors.managers.DataSourceManager;
-	import weave.primitives.AttributeHierarchy;
 	import weave.services.LocalAsyncService;
 	import weave.services.addAsyncResponder;
 	import weave.ui.AlertTextBox;
@@ -204,6 +203,7 @@ package weave.application
 			if (ExternalInterface.available)
 				ExternalInterface.addCallback('loadFile', loadFile);
 			WeaveAPI.initializeExternalInterface();
+			WeaveAPI.executeJavaScript(new _InitializeWeaveData.WeavePathData());
 
 			getFlashVars();
 			handleFlashVarPresentation();
@@ -786,7 +786,7 @@ package weave.application
 							function ():void {
 								var sources:Array = WeaveAPI.globalHashMap.getObjects(IDataSource);
 								for each (var source:IDataSource in sources)
-									(source.attributeHierarchy as AttributeHierarchy).value = null;
+									source.refreshHierarchy();
 							}
 						)
 					);
