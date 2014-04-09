@@ -87,8 +87,6 @@ public class AWSRService extends RService
 
 	private String awsConfigPath = "";
 
-	private static Process stataProcess = null;
-	
 	public static class AWSConnectionObject {
 		String connectionType;
         String user;
@@ -109,7 +107,7 @@ public class AWSRService extends RService
 	
 	public class MyResult {
 	
-		public RResult[] data;
+		public Object data;
 		public long[] times = new long[2];
 	
 	}
@@ -702,27 +700,36 @@ public class AWSRService extends RService
 
 		CSVParser parser = new CSVParser();
 		int exitValue = -1;
-//		long startTime = System.currentTimeMillis();
+		long startTime = System.currentTimeMillis();
 		Object[][] recordData = DataService.getFilteredRows(ids, filters, null).recordData;
 		String[][] resultData;
+		
 		if(recordData.length == 0){
 			throw new RemoteException("Query produced no rows...");
 		}
 		
-//		String stringData =  parser.createCSV(recordData, true, true);
+		try 
+		{
+			File data = new File("/Users/franckamayou/Desktop/StataTest/data.csv");
+			BufferedWriter out = new BufferedWriter(new FileWriter(data));
+			
+			parser.createCSV(recordData, true, out, true);
+			out.close();
+		} catch( IOException e)
+		{
+			e.printStackTrace();
+			throw new RemoteException("Error while trying to write SQL data to file");
+		}
+
+		recordData = null;
+	
+		long endTime = System.currentTimeMillis();
 		
-//		recordData = null;
+		long time1 = endTime - startTime;
 		
-//		File data = new File("/Users/franckamayou/Desktop/StataTest/data.csv");
-		
-//		FileUtils.writeStringToFile(data, stringData);
-		
-//		long endTime = System.currentTimeMillis();
-//		
-//		long time1 = endTime - startTime;
-		
+		startTime = System.currentTimeMillis();
 		String[] args = { "stata-se", "-b", "-q", "do", "/Users/franckamayou/Desktop/StataTest/s03_script_v2013-0621b.do" };
-		
+
 		try {
 			exitValue = CommandUtils.runCommand(args, true);
 			System.out.println("Program terminated with status " + exitValue);
@@ -741,14 +748,18 @@ public class AWSRService extends RService
 		} else {
 			if(scriptResult.exists()) {
 				resultData = parser.parseCSV(scriptResult, true);
-//				REXP evalValue = rConnection.eval("read.csv(\"/Users/franckamayou/Desktop/StataTest/stata_result.csv\")");
-//				resultData = RServiceUsingRserve.rexp2javaObj(evalValue);
 			} else {
 				throw new RemoteException("Stata script terminated with no result data");
 			}
-			
 		}
+		endTime = System.currentTimeMillis();
 		
+		long time2 = endTime - startTime;
+		
+		MyResult result = new MyResult();
+		result.data = resultData;
+		result.times[0] = time1;
+		result.times[1] =  time2;
 		return resultData;
 	}
 
