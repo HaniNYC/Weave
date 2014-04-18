@@ -46,7 +46,7 @@ analysis_mod.controller('byVariableCtrl', function($scope, queryService){
 				
 				queryService.queryObject.ByVariableFilter[i] = { 
 																	column : column
-															   }
+															   };
 				if(metadata) {
 					if(metadata.hasOwnProperty("varType") && metadata.hasOwnProperty("varValues")) {
 						$scope.filterType[i] = metadata.varType;

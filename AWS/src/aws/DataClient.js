@@ -12,7 +12,7 @@ var dataServiceURL = '/WeaveServices/DataService';
 aws.DataClient.getDataTableList = function(handleResult) {
 	aws.queryService(dataServiceURL, "getDataTableList", null, handleResult);
 };
-	
+
 /**
  * This function mirrors the getEntityChildIds on the servlet.
  * 

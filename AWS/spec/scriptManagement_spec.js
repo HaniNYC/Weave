@@ -47,16 +47,16 @@ describe("It should fetch a list of scripts from server", function(){
     it('should call the aws Rclient',function(){
         var fake = function(callback){
             return callback(['a','b']);
-        }
+        };
         spyOn(aws.RClient,'getListOfScripts').andCallFake(fake);
         scriptManagerService.getListOfScripts();
         expect(aws.RClient.getListOfScripts).toHaveBeenCalled();
         expect(scriptManagerService.dataObject.listOfScripts).toBeDefined();
         expect(scriptManagerService.dataObject.listOfScripts).toEqual(['a','b']);
 
-    })
+    });
 
     afterEach(function(){
         console.log("running aftereach");
-    })
+    });
 });

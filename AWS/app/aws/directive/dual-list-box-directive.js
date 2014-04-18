@@ -77,7 +77,7 @@ angular.module('aws.directives.dualListBox', [])
                                 container.addClass(c.toString());
                             }
                             if (elements.originalselect.height() < settings.selectorminimalheight) {
-                                height = settings.selectorminimalheight
+                                height = settings.selectorminimalheight;
                             } else {
                                 height = elements.originalselect.height();
                             }
@@ -328,8 +328,8 @@ angular.module('aws.directives.dualListBox', [])
                         function triggerchangeevent() {
                             elements.originalselect.trigger('change');
                         }
-                    }
+                    };
                 }
 
-            }
+            };
         });

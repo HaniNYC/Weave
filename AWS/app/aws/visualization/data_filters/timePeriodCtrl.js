@@ -87,7 +87,7 @@ analysis_mod.controller('timePeriodCtrl', function($scope, queryService){
 			}
 		}
 		return treeData;
-	}
+	};
 
 	$scope.$watch(function() {
 		return timeTreeData;
@@ -162,5 +162,5 @@ analysis_mod.controller('timePeriodCtrl', function($scope, queryService){
 		a = a.data.key;
 		b = b.data.key;
 		return a > b ? 1 : a < b ? -1 : 0;
-    }
+    };
 });
